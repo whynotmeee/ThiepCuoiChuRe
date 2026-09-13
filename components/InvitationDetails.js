@@ -9,9 +9,25 @@ export default function InvitationDetails() {
 
   const lines = (t) => (t || "").split("\n");
 
-  // Nguồn bản đồ nhúng: ưu tiên mapEmbed, nếu không thì tự tạo từ địa chỉ.
+  // Cố gắng trích toạ độ (lat,lng) từ mapUrl để bản đồ nhúng trỏ đúng vị trí.
+  const extractLatLng = (url) => {
+    if (!url) return null;
+    // Ưu tiên toạ độ đích trong data (…!3dLAT!4dLNG…)
+    const dm = url.match(/!3d(-?\d+\.\d+)!4d(-?\d+\.\d+)/);
+    if (dm) return { lat: dm[1], lng: dm[2] };
+    // Toạ độ trung tâm @LAT,LNG
+    const am = url.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
+    if (am) return { lat: am[1], lng: am[2] };
+    return null;
+  };
+
+  const coords = extractLatLng(inv.mapUrl);
+
+  // Nguồn bản đồ nhúng: ưu tiên mapEmbed > toạ độ từ mapUrl > địa chỉ chữ.
   const mapSrc = inv.mapEmbed
     ? inv.mapEmbed
+    : coords
+    ? `https://maps.google.com/maps?q=${coords.lat},${coords.lng}&hl=vi&z=17&output=embed`
     : inv.placeAddress
     ? `https://maps.google.com/maps?q=${encodeURIComponent(
         inv.placeAddress
